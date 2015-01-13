@@ -1,5 +1,5 @@
 # name of your application
-APPLICATION = hello-world
+APPLICATION = dsiplay_node
 
 # If no BOARD is found in the environment, use this default:
 BOARD ?= native
@@ -14,5 +14,12 @@ CFLAGS += -DDEVELHELP
 
 # Change this to 0 show compiler invocation lines by default:
 QUIET ?= 1
+
+USEPKG += libcoap
+BOARD_BLACKLIST := chronos msb-430 msb-430h telosb wsn430-v1_3b wsn430-v1_4 z1
+
+BOARD_INSUFFICIENT_RAM := redbee-econotag
+
+USEMODULE += defaulttransceiver
 
 include $(RIOTBASE)/Makefile.include
