@@ -15,11 +15,9 @@ CFLAGS += -DDEVELHELP
 # Change this to 0 show compiler invocation lines by default:
 QUIET ?= 1
 
-USEPKG += libcoap
-BOARD_BLACKLIST := chronos msb-430 msb-430h telosb wsn430-v1_3b wsn430-v1_4 z1
-
-BOARD_INSUFFICIENT_RAM := redbee-econotag
+# TODO: what about BOARD_BLACKLIST and BOARD_INSUFFICIENT_RAM
 
 USEMODULE += defaulttransceiver
+USEPKG += libcoap
 
 include $(RIOTBASE)/Makefile.include

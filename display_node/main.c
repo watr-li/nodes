@@ -20,6 +20,9 @@
  */
 
 #include <stdio.h>
+#include <coap.h>
+
+#include "include/coap_wrapper.h"
 
 int main(void)
 {
@@ -27,6 +30,7 @@ int main(void)
 
     printf("You are running RIOT on a(n) %s board.\n", RIOT_BOARD);
     printf("This board features a(n) %s MCU.\n", RIOT_MCU);
+    printf("Libcoap compiled!");
 
     return 0;
 }
