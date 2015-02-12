@@ -10,9 +10,19 @@ RIOTBASE ?= $(CURDIR)/../../RIOT
 # Comment this out to disable code in RIOT that does safety checking
 # which is not needed in a production environment but helps in the
 # development process:
-CFLAGS += -DDEVELHELP
+CFLAGS += -DDEVELHELP -DMICROCOAP_DEBUG
 
 # Change this to 0 show compiler invocation lines by default:
 QUIET ?= 1
+
+USEPKG=microcoap
+
+USEMODULE += config
+USEMODULE += uart0
+
+USEMODULE += nativenet
+
+USEMODULE += sixlowpan
+USEMODULE += udp
 
 include $(RIOTBASE)/Makefile.include
