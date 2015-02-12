@@ -29,6 +29,8 @@
 #include <coap.h>
 #include "hashes.h"
 
+#include "coap_ext.h"
+
 #define ENABLE_DEBUG    (1)
 #include "debug.h"
 
@@ -42,6 +44,8 @@ static void *_microcoap_server_thread(void *arg);
 msg_t msg_q[RCV_MSG_Q_SIZE];
 char _rcv_stack_buf[KERNEL_CONF_STACKSIZE_MAIN];
 
+static coap_endpoint_path_t path = {2, {"foo", "bar"}};
+
 static ipv6_addr_t prefix;
 int sock_rcv, if_id;
 sockaddr6_t sa_rcv;
@@ -52,7 +56,6 @@ coap_rw_buffer_t scratch_buf = {scratch_raw, sizeof(scratch_raw)};
 static void _init_tlayer(void);
 static uint16_t get_hw_addr(void);
 int make_homemade_request(uint8_t* snd_buf);
-
 
 int main(void)
 {
@@ -98,6 +101,7 @@ static void _init_tlayer(void)
 static void *_microcoap_server_thread(void *arg)
 {
     (void)arg; /* make the compiler shut up about unused variables */
+    char *payload = "xoxo";
 
     printf("initializing receive socket...\n");
 
@@ -145,63 +149,18 @@ static void *_microcoap_server_thread(void *arg)
                 coap_dumpPacket(&rsppkt);
                 socket_base_sendto(sock_rcv, buf, rsplen, 0, &sa_rcv, sizeof(sa_rcv));
 
-                printf("[main-posix] Following up with own initial GET:\n");
+                printf("[main-posix] Following up with own initial PUT:\n");
                 
                 // clear buffer
                 memset(buf, 0, BUFSZ);
 
-                if (0 == make_homemade_request(buf)) {
+                if (0 == coap_ext_build_PUT(buf, BUFSZ, payload, &path)) {
                     socket_base_sendto(sock_rcv, buf, rsplen, 0, &sa_rcv, sizeof(sa_rcv));
-                    printf("[main-posix] homemade inital GET sent.\n");
+                    printf("[main-posix] inital PUT sent.\n");
                 }
             }
         }
     }
 
     return NULL;
-}
-
-/* organic, local, gluten-free */
-int make_homemade_request(uint8_t* snd_buf)
-{
-    printf("creating example GET request...\n");
-    static char* msg= "hello";
-    size_t req_pkt_sz;
-    int errcode;
-
-    // cobble together CoAP packet
-    coap_header_t req_hdr = {
-        .ver = 1,
-        .t = COAP_TYPE_NONCON,
-        .tkl = 0,                  /* microcoap can't generate tokens anyway */
-        .code = MAKE_RSPCODE(0, COAP_METHOD_GET),  /* class 0, detail 1 */
-        .id = {22,22}              /*let's see if this works :D */
-    };
-
-    coap_buffer_t payload = {
-        .p = (const uint8_t *) msg,
-        .len = strlen(msg)
-    };
-
-    coap_packet_t req_pkt = {
-        .hdr = req_hdr,
-        .tok = (coap_buffer_t) {}, /* No token */
-        .numopts = 0,
-        .opts = {},
-        .payload = payload
-    };
-
-    req_pkt_sz = sizeof(req_pkt);
-
-#ifdef DEBUG
-    printf("[main-posix] content:\n");
-    coap_dumpPacket(&req_pkt);
-#endif
-
-    // try to  write packet to send buffer
-    if (0 != (errcode = coap_build(snd_buf, &req_pkt_sz, &req_pkt))) {
-        printf("Error building packet! Error code: %i\nAborting. \n", errcode);
-        return 1;
-    }
-    return 0;
 }
