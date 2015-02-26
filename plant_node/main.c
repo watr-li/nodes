@@ -29,13 +29,16 @@
 #include <coap.h>
 #include "hashes.h"
 
+#include "shell.h"
+#include "shell_commands.h"
+
 #include "coap_ext.h"
 
 #define ENABLE_DEBUG    (1)
 #include "debug.h"
 
 #define PORT 5683
-#define BUFSZ 128
+#define BUFSZ 500
 
 #define RCV_MSG_Q_SIZE      (64)
 
@@ -44,11 +47,11 @@ static void *_microcoap_server_thread(void *arg);
 msg_t msg_q[RCV_MSG_Q_SIZE];
 char _rcv_stack_buf[KERNEL_CONF_STACKSIZE_MAIN];
 
-static coap_endpoint_path_t path = {2, {"foo", "bar"}};
+static coap_endpoint_path_t path = {1, {"node"}};
 
 static ipv6_addr_t prefix;
-int sock_rcv, if_id;
-sockaddr6_t sa_rcv;
+int sock_snd, sock_rcv, if_id;
+sockaddr6_t sa_snd, sa_rcv;
 uint8_t buf[BUFSZ];
 uint8_t scratch_raw[BUFSZ];
 coap_rw_buffer_t scratch_buf = {scratch_raw, sizeof(scratch_raw)};
@@ -56,6 +59,36 @@ coap_rw_buffer_t scratch_buf = {scratch_raw, sizeof(scratch_raw)};
 static void _init_tlayer(void);
 static uint16_t get_hw_addr(void);
 int make_homemade_request(uint8_t* snd_buf);
+static void _init_sock_snd(void);
+
+static void send_put(int argc, char **argv)
+{
+    /* usage: put <payload> <ip> (!! PORT IS ASSUMED TO BE 5683)*/
+
+    // clear buffer
+    memset(buf, 0, BUFSZ);
+    char* payload = argv[1];
+
+    // turn <ip> into ipv6_addr_t
+    inet_pton(AF_INET6, argv[2], &sa_snd.sin6_addr);
+    sa_snd.sin6_family = AF_INET6;
+    sa_snd.sin6_port = 5683;
+    
+    if (0 == coap_ext_build_PUT(buf, BUFSZ, payload, &path)) {
+      //socket_base_sendto(sock_rcv, buf, rsplen, 0, &sa_rcv, sizeof(sa_rcv));
+        printf("my thread ID: %i\n", thread_getpid());
+        socket_base_sendto(sock_snd, buf, strlen(buf), 0, &sa_snd, sizeof(sa_snd));
+        printf("[main-posix] PUT with payload %s sent to %s:%i\n", argv[1], argv[2], sa_snd.sin6_port);
+    }
+
+    printf("asdfg\n");
+
+}
+
+const shell_command_t shell_commands[] = {
+    {"put", "send put request", send_put},
+    {NULL, NULL, NULL}
+};
 
 int main(void)
 {
@@ -63,12 +96,24 @@ int main(void)
     DEBUG("Starting example microcoap server...\n");
 
     _init_tlayer();
+    _init_sock_snd();
     thread_create(_rcv_stack_buf, KERNEL_CONF_STACKSIZE_MAIN, PRIORITY_MAIN, CREATE_STACKTEST, _microcoap_server_thread, NULL ,"_microcoap_server_thread");
+
+    /* Open the UART0 for the shell */
+    posix_open(uart0_handler_pid, 0);
+
+    printf("\n\t\t\tWelcome to RIOT\n\n");
+
+    shell_t shell;
+    shell_init(&shell, shell_commands, UART0_BUFSIZE, uart0_readc, uart0_putc);
+
+    shell_run(&shell);
 
     DEBUG("Ready to receive requests.\n");
 
     return 0;
 }
+
 
 static uint16_t get_hw_addr(void)
 {
@@ -96,6 +141,24 @@ static void _init_tlayer(void)
     if_id = 0; /* having more than one interface isn't supported anyway */
 
     sixlowpan_lowpan_init_interface(if_id);
+}
+
+static void _init_sock_snd(void)
+{
+    sa_snd = (sockaddr6_t) { .sin6_family = AF_INET6,
+               .sin6_port = 5683 };
+
+    sock_snd = socket_base_socket(PF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+
+    if (-1 == socket_base_bind(sock_snd, &sa_snd, sizeof(sa_snd))) {
+        printf("Error: bind to send socket failed!\n");
+        socket_base_close(sock_snd);
+    }
+
+    if(-1 == sock_snd) {
+        printf("[demo]   Error Creating Socket!\n");
+        return;
+    }
 }
 
 static void *_microcoap_server_thread(void *arg)

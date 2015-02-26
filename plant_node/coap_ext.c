@@ -19,12 +19,70 @@
 
 #include "coap_ext.h"
 
+#define ENABLE_DEBUG    (1)
+#include "debug.h"
+
+// TODO: use rw_buf?
 int coap_ext_build_PUT(uint8_t* buf, size_t buflen, char* payload, coap_endpoint_path_t* path)
 {
     /* 
      * Note: the resource URI is coded as an option! -> COAP_OPTION_URI_PATH
      */
 
+    DEBUG("creating PUT request...\n");
+    size_t req_pkt_sz;
+    int errcode;
+
+    /* cobble together CoAP header */
+    coap_header_t req_hdr = {
+        .ver = 1,
+        .t = COAP_TYPE_NONCON,     /* TODO initial PUTs should probably be confirmable */
+        .tkl = 0,                  /* microcoap can't generate tokens anyway */
+        .code = MAKE_RSPCODE(0, COAP_METHOD_GET),  /* class 0, detail 1: this is a PUT. */
+        .id = {22,22}              /*let's see if this works :D */
+    };
+
+    /*TODO: actually read pathstr from *path */
+    /* TODO: slash davor/nach oder nicht? */
+    char path_str[] = "foo/bar";
+
+    coap_option_t path_option = {
+        .num = 1,
+        .buf = {.p = (const uint8_t *) &path_str,
+                .len = strlen(path_str)}
+    };
+
+    coap_buffer_t payload_buf = {
+        .p = (const uint8_t *) payload,
+        .len = strlen(payload)
+    };
+
+    coap_packet_t req_pkt = {
+        .hdr = req_hdr,
+        .tok = (coap_buffer_t) {}, /* No token */
+        .numopts = 1,              /* Path to resource is the only option */
+        .opts = {path_option},
+        .payload = payload_buf
+    };
+
+    req_pkt_sz = sizeof(req_pkt);
+
+    if (buflen < req_pkt_sz) {
+        DEBUG("Error: buflen too small:\n\tbuflen:%zd\n\treq_pkt_sz:%zd\n", buflen, req_pkt_sz);
+        return -1;
+    }
+
+#ifdef DEBUG
+    printf("[main-posix] content:\n");
+    coap_dumpPacket(&req_pkt);
+#endif
+
+    printf("xoxo\n");
+    // try to  write packet to send buffer
+    if (0 != (errcode = coap_build(buf, &req_pkt_sz, &req_pkt))) {
+        printf("Error building packet! Error code: %i\nAborting. \n", errcode);
+        return -1;
+    }
     return 0;
 }
 

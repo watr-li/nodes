@@ -19,6 +19,8 @@ USEPKG=microcoap
 
 USEMODULE += config
 USEMODULE += uart0
+USEMODULE += shell
+USEMODULE += shell_commands
 
 USEMODULE += nativenet
 
