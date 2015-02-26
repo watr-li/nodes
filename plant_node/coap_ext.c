@@ -44,7 +44,7 @@ int coap_ext_build_PUT(uint8_t* buf, size_t buflen, char* payload, coap_endpoint
 
     /*TODO: actually read pathstr from *path */
     /* TODO: slash davor/nach oder nicht? */
-    char path_str[] = "foo/bar";
+    char path_str[] = "helloWorld";
 
     coap_option_t path_option = {
         .num = 1,
