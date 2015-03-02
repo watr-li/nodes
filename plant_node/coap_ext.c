@@ -32,6 +32,7 @@ int coap_ext_build_PUT(uint8_t* buf, size_t buflen, char* payload, coap_endpoint
     DEBUG("creating PUT request...\n");
     size_t req_pkt_sz;
     int errcode;
+    int segment_count = path->count;
 
     /* cobble together CoAP header */
     coap_header_t req_hdr = {
@@ -42,16 +43,6 @@ int coap_ext_build_PUT(uint8_t* buf, size_t buflen, char* payload, coap_endpoint
         .id = {22,22}              /*let's see if this works :D */
     };
 
-    /*TODO: actually read pathstr from *path */
-    /* TODO: slash davor/nach oder nicht? */
-    char path_str[] = "helloWorld";
-
-    coap_option_t path_option = {
-        .num = 1,
-        .buf = {.p = (const uint8_t *) &path_str,
-                .len = strlen(path_str)}
-    };
-
     coap_buffer_t payload_buf = {
         .p = (const uint8_t *) payload,
         .len = strlen(payload)
@@ -59,11 +50,21 @@ int coap_ext_build_PUT(uint8_t* buf, size_t buflen, char* payload, coap_endpoint
 
     coap_packet_t req_pkt = {
         .hdr = req_hdr,
-        .tok = (coap_buffer_t) {}, /* No token */
-        .numopts = 1,              /* Path to resource is the only option */
-        .opts = {path_option},
+        .tok = (coap_buffer_t) {},  /* No token */
+        .numopts = segment_count,   /* all segments of the path to the resource */
         .payload = payload_buf
     };
+
+    /* Create one option for each segment of the URI path and fill req_pkt.opts*/
+    for (int i=0; i < segment_count; i++ ) {
+        coap_option_t path_option = {
+            .num = COAP_OPTION_URI_PATH,
+            .buf = {.p = (const uint8_t *) &path->elems[i],
+                    .len = strlen(path->elems[i])}
+        };
+
+        req_pkt.opts[i] = path_option;
+    }
 
     req_pkt_sz = sizeof(req_pkt);
 
