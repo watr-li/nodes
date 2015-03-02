@@ -37,7 +37,8 @@
 #define ENABLE_DEBUG    (1)
 #include "debug.h"
 
-#define PORT 5683
+#define SND_PORT 5683
+#define RCV_PORT 5684
 #define BUFSZ 500
 
 #define RCV_MSG_Q_SIZE      (64)
@@ -47,7 +48,8 @@ static void *_microcoap_server_thread(void *arg);
 msg_t msg_q[RCV_MSG_Q_SIZE];
 char _rcv_stack_buf[KERNEL_CONF_STACKSIZE_MAIN];
 
-static coap_endpoint_path_t path = {1, {"node"}};
+/* TODO: replace humidity with node ID */
+static coap_endpoint_path_t path = {2, {"node", "humidity"}};
 
 static ipv6_addr_t prefix;
 int sock_snd, sock_rcv, if_id;
@@ -63,7 +65,14 @@ static void _init_sock_snd(void);
 
 static void send_put(int argc, char **argv)
 {
-    /* usage: put <payload> <ip> (!! PORT IS ASSUMED TO BE 5683)*/
+    /* usage: put <payload> <ip> (!! PORT IS ASSUMED TO BE 5684)*/
+
+    char* usage = "usage: put <payload> <ip> (!! PORT IS ASSUMED TO BE 5684)";
+
+    if (argc != 3) {
+        printf("%s\n",usage);
+        return;
+    }
 
     // clear buffer
     memset(buf, 0, BUFSZ);
@@ -72,17 +81,12 @@ static void send_put(int argc, char **argv)
     // turn <ip> into ipv6_addr_t
     inet_pton(AF_INET6, argv[2], &sa_snd.sin6_addr);
     sa_snd.sin6_family = AF_INET6;
-    sa_snd.sin6_port = 5683;
+    sa_snd.sin6_port = RCV_PORT;
     
     if (0 == coap_ext_build_PUT(buf, BUFSZ, payload, &path)) {
-      //socket_base_sendto(sock_rcv, buf, rsplen, 0, &sa_rcv, sizeof(sa_rcv));
-        printf("my thread ID: %i\n", thread_getpid());
         socket_base_sendto(sock_snd, buf, strlen(buf), 0, &sa_snd, sizeof(sa_snd));
         printf("[main-posix] PUT with payload %s sent to %s:%i\n", argv[1], argv[2], sa_snd.sin6_port);
     }
-
-    printf("asdfg\n");
-
 }
 
 const shell_command_t shell_commands[] = {
@@ -92,7 +96,6 @@ const shell_command_t shell_commands[] = {
 
 int main(void)
 {
-
     DEBUG("Starting example microcoap server...\n");
 
     _init_tlayer();
@@ -118,14 +121,14 @@ int main(void)
 static uint16_t get_hw_addr(void)
 {
     /* Use a hash of the cpu ID */
-    /* 
+ 
     uint8_t cpuid[CPUID_ID_LEN];
     cpuid_get(cpuid);
     uint16_t hw_addr = (uint16_t) dek_hash(cpuid, CPUID_ID_LEN);
     DEBUG("Set hw addr to: %d\n", hw_addr);
     return hw_addr;
-    */
-    return 1;
+    
+    //return 1;
 }
 
 /* init transport layer & routing stuff*/
@@ -145,15 +148,11 @@ static void _init_tlayer(void)
 
 static void _init_sock_snd(void)
 {
+    printf("initializing send socket...\n");
     sa_snd = (sockaddr6_t) { .sin6_family = AF_INET6,
-               .sin6_port = 5683 };
+                             .sin6_port = HTONS(SND_PORT)};
 
     sock_snd = socket_base_socket(PF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-
-    if (-1 == socket_base_bind(sock_snd, &sa_snd, sizeof(sa_snd))) {
-        printf("Error: bind to send socket failed!\n");
-        socket_base_close(sock_snd);
-    }
 
     if(-1 == sock_snd) {
         printf("[demo]   Error Creating Socket!\n");
@@ -169,11 +168,11 @@ static void *_microcoap_server_thread(void *arg)
     printf("initializing receive socket...\n");
 
     sa_rcv = (sockaddr6_t) { .sin6_family = AF_INET6,
-               .sin6_port = HTONS(PORT) };
+               .sin6_port = HTONS(RCV_PORT) };
 
     sock_rcv = socket_base_socket(PF_INET6, SOCK_DGRAM, IPPROTO_UDP);
 
-    if (-1 == socket_base_bind(sock_rcv, &sa_rcv, sizeof(sa_rcv))) {
+    if (-1 == (sock_rcv, &sa_rcv, sizeof(sa_rcv))) {
         printf("Error: bind to receive socket failed!\n");
         socket_base_close(sock_rcv);
     }
