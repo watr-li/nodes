@@ -22,7 +22,7 @@
 #include <string.h>
 #include "coap.h"
 
-#define ENABLE_DEBUG    (0)
+#define ENABLE_DEBUG    (1)
 #include "debug.h"
 
 #define MAX_RESPONSE_LEN 1500
@@ -46,8 +46,18 @@ static int handle_get_response(coap_rw_buffer_t *scratch, const coap_packet_t *i
                               id_hi, id_lo, &inpkt->tok, COAP_RSPCODE_CONTENT, COAP_CONTENTTYPE_TEXT_PLAIN);
 }
 
+/* The handler which handles the path /foo/bar */
+static int handle_put_response(coap_rw_buffer_t *scratch, const coap_packet_t *inpkt, coap_packet_t *outpkt, uint8_t id_hi, uint8_t id_lo)
+{
+    DEBUG("[endpoints]  %s()\n",  __func__);
+    DEBUG("Got PUT with conten:\n");
+    coap_dumpPacket(&inpkt);
+    return 1;
+}
+
 const coap_endpoint_t endpoints[] =
 {
     {COAP_METHOD_GET, handle_get_response, &path, "ct=0"},
+    {COAP_METHOD_PUT, handle_get_response, &path, "ct=0"},    
     {(coap_method_t)0, NULL, NULL, NULL} /* marks the end of the endpoints array */
 };
