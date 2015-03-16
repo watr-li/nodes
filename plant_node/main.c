@@ -39,7 +39,7 @@
 
 #define SND_PORT 5683
 #define RCV_PORT 5684
-#define BUFSZ 500
+#define BUFSZ 500 // TODO: even smaller bufsz! (adjust to actual coap pkt sz)
 
 #define RCV_MSG_Q_SIZE      (64)
 
@@ -57,6 +57,7 @@ sockaddr6_t sa_snd, sa_rcv;
 uint8_t buf[BUFSZ];
 uint8_t scratch_raw[BUFSZ];
 coap_rw_buffer_t scratch_buf = {scratch_raw, sizeof(scratch_raw)};
+size_t rsplen;
 
 static void _init_tlayer(void);
 static uint16_t get_hw_addr(void);
@@ -74,8 +75,7 @@ static void send_put(int argc, char **argv)
         return;
     }
 
-    // clear buffer
-    memset(buf, 0, BUFSZ);
+    rsplen = sizeof(buf);
     char* payload = argv[1];
 
     // turn <ip> into ipv6_addr_t
@@ -83,8 +83,8 @@ static void send_put(int argc, char **argv)
     sa_snd.sin6_family = AF_INET6;
     sa_snd.sin6_port = RCV_PORT;
     
-    if (0 == coap_ext_build_PUT(buf, BUFSZ, payload, &path)) {
-        socket_base_sendto(sock_snd, buf, strlen(buf), 0, &sa_snd, sizeof(sa_snd));
+    if (0 == coap_ext_build_PUT(buf, &rsplen, payload, &path)) {
+        socket_base_sendto(sock_snd, buf, rsplen, 0, &sa_snd, sizeof(sa_snd));
         printf("[main-posix] PUT with payload %s sent to %s:%i\n", argv[1], argv[2], sa_snd.sin6_port);
     }
 }
@@ -216,8 +216,10 @@ static void *_microcoap_server_thread(void *arg)
                 // clear buffer
                 memset(buf, 0, BUFSZ);
 
-                if (0 == coap_ext_build_PUT(buf, BUFSZ, payload, &path)) {
-                    socket_base_sendto(sock_rcv, buf, rsplen, 0, &sa_rcv, sizeof(sa_rcv));
+                rsplen = sizeof(buf);
+
+                if (0 == coap_ext_build_PUT(buf, &rsplen, payload, &path)) {
+                    socket_base_sendto(sock_snd, buf, rsplen, 0, &sa_snd, sizeof(sa_snd));
                     printf("[main-posix] inital PUT sent.\n");
                 }
             }
