@@ -23,7 +23,11 @@
 #include "debug.h"
 
 // TODO: use rw_buf?
-int coap_ext_build_PUT(uint8_t* buf, size_t buflen, char* payload, coap_endpoint_path_t* path)
+/**
+Build a PUT request.
+The value of buflen will be the request packet's size after successful completion. 
+*/
+int coap_ext_build_PUT(uint8_t *buf, size_t *buflen, char *payload, coap_endpoint_path_t *path)
 {
     /* 
      * Note: the resource URI is coded as an option! -> COAP_OPTION_URI_PATH
@@ -37,10 +41,10 @@ int coap_ext_build_PUT(uint8_t* buf, size_t buflen, char* payload, coap_endpoint
     /* cobble together CoAP header */
     coap_header_t req_hdr = {
         .ver = 1,
-        .t = COAP_TYPE_NONCON,     /* TODO initial PUTs should probably be confirmable */
-        .tkl = 0,                  /* microcoap can't generate tokens anyway */
+        .t = COAP_TYPE_CON,
+        .tkl = 0,                                  /* microcoap can't generate tokens anyway */
         .code = MAKE_RSPCODE(0, COAP_METHOD_PUT),  /* class 0, detail 1: this is a PUT. */
-        .id = {22,22}              /*let's see if this works :D */
+        .id = {22,22}                              /* TODO: create dynamic ID (seqnum style?) */
     };
 
     coap_buffer_t payload_buf = {
@@ -59,7 +63,7 @@ int coap_ext_build_PUT(uint8_t* buf, size_t buflen, char* payload, coap_endpoint
     for (int i=0; i < segment_count; i++ ) {
         coap_option_t path_option = {
             .num = COAP_OPTION_URI_PATH,
-            .buf = {.p = (const uint8_t *) &path->elems[i],
+            .buf = {.p = (const uint8_t *) path->elems[i],
                     .len = strlen(path->elems[i])}
         };
 
@@ -80,7 +84,7 @@ int coap_ext_build_PUT(uint8_t* buf, size_t buflen, char* payload, coap_endpoint
 
     printf("xoxo\n");
     // try to  write packet to send buffer
-    if (0 != (errcode = coap_build(buf, &req_pkt_sz, &req_pkt))) {
+    if (0 != (errcode = coap_build(buf, buflen, &req_pkt))) {
         printf("Error building packet! Error code: %i\nAborting. \n", errcode);
         return -1;
     }
