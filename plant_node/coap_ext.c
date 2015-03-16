@@ -44,7 +44,7 @@ int coap_ext_build_PUT(uint8_t* buf, size_t buflen, char* payload, coap_endpoint
         .ver = 1,
         .t = COAP_TYPE_NONCON,     /* TODO initial PUTs should probably be confirmable */
         .tkl = 0,                  /* microcoap can't generate tokens anyway */
-        .code = MAKE_RSPCODE(0, COAP_METHOD_GET),  /* class 0, detail 1: this is a PUT. */
+        .code = MAKE_RSPCODE(0, COAP_METHOD_PUT),  /* class 0, detail 1: this is a PUT. */
         .id = {22,22}              /*let's see if this works :D */
     };
 
