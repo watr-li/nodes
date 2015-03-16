@@ -19,8 +19,13 @@
 
 #include "coap_ext.h"
 
+#ifndef REG_APP
 #define ENABLE_DEBUG    (1)
 #include "debug.h"
+#else
+#include <stdio.h>
+#define DEBUG(...) printf(__VA_ARGS__)
+#endif
 
 // TODO: use rw_buf?
 int coap_ext_build_PUT(uint8_t* buf, size_t buflen, char* payload, coap_endpoint_path_t* path)
