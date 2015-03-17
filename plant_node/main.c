@@ -27,7 +27,7 @@
 #include "periph/gpio.h"
 
 #if ADC_NUMOF < 1
-#error "Please enable at least 1 ADC device to run this test"
+//#error "Please enable at least 1 ADC device to run this test"
 #endif
 
 #define RES                         ADC_RES_12BIT
@@ -35,10 +35,21 @@
 #define ADC_CHANNEL_USE             0
 #define GPIO_POWER_PIN              GPIO_0
 
-static unsigned int value;
-
 int main(void)
 {
+    static unsigned int humidity;
+
+    sense_humidity(&humidity);
+}
+
+/**
+ * @brief Query the humidity sensor for data.
+ * @param[in] humidity  int to which the humidity value should be written
+ * @return              0 on success, -1 otherwise // TODO: proper error codes
+ */
+int sense_humidity(unsigned int *humidity)
+{
+
     puts("\nRIOT test for a moisture sensor\n");
 
     timex_t sleep1 = timex_set(1, 0); /* 1 sec. */
@@ -73,16 +84,47 @@ int main(void)
         /* just for safety */
         vtimer_sleep(sleep1);
 
-        value = adc_sample(ADC_IN_USE, ADC_CHANNEL_USE);
+        *humidity = adc_sample(ADC_IN_USE, ADC_CHANNEL_USE);
 
         gpio_clear(GPIO_POWER_PIN);
 
         /* print the result */
-        printf("Value: ADC_%i: %4i\n", ADC_IN_USE, value);
+        printf("Humidity: ADC_%i: %4i\n", ADC_IN_USE, *humidity);
 
         /* wait for next measure */
         vtimer_sleep(sleep2);
     }
 
     return 0;
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

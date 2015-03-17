@@ -1,5 +1,8 @@
 APPLICATION = plant_node
-include ../Makefile.tests_common
+#include ../Makefile.tests_common
+
+BOARD ?= samr21-xpro
+RIOTBASE ?= $(CURDIR)/../../RIOT
 
 FEATURES_REQUIRED = periph_adc
 
