@@ -14,7 +14,7 @@
  * @brief       Test for the SEN0114 moisture sensor
  *
  * @author      Peter Kietzmann <peter.kietzmann@haw-hamburg.de>
- *
+ * @author      Lotte Steenbrink <lotte.steenbrink@haw-hamburg.de>
  * @}
  */
 
@@ -26,6 +26,9 @@
 #include "periph/adc.h"
 #include "periph/gpio.h"
 
+#define ENABLE_DEBUG (0)
+#include "debug.h"
+
 #if ADC_NUMOF < 1
 //#error "Please enable at least 1 ADC device to run this test"
 #endif
@@ -35,68 +38,60 @@
 #define ADC_CHANNEL_USE             0
 #define GPIO_POWER_PIN              GPIO_0
 
+timex_t sleep_timer = timex_set(1, 0); /* 1 sec. */
+
 int main(void)
 {
     static unsigned int humidity;
 
+    init_sensor_humidity();
     sense_humidity(&humidity);
+}
+
+
+/**
+ * @brief    Initialize humidity sensor.
+ * @return   0 on success, 1 otherwise // TODO: proper error codes?
+ */
+int init_sensor_humidity(void)
+{
+
+    /* initialize a GPIO that powers the sensor just during a measure */
+    DEBUG("Initializing GPIO_%i as power supplying pin", GPIO_POWER_PIN);
+    if (gpio_init_out(GPIO_POWER_PIN, GPIO_NOPULL) == 0) {
+        DEBUG("    [ok]\n");
+    }
+    else {
+        DEBUG("    [failed]\n");
+        return 1;
+    }
+
+    /* initialize ADC device */
+    DEBUG("Initializing ADC_%i @ %i bit resolution", ADC_IN_USE, (6 + (2* RES)));
+    if (adc_init(ADC_IN_USE, RES) == 0) {
+        DEBUG("    [ok]\n");
+    }
+    else {
+        DEBUG("    [failed]\n");
+        return 1;
+    }
 }
 
 /**
  * @brief Query the humidity sensor for data.
  * @param[in] humidity  int to which the humidity value should be written
- * @return              0 on success, -1 otherwise // TODO: proper error codes
  */
-int sense_humidity(unsigned int *humidity)
+void sense_humidity(unsigned int *humidity)
 {
+    DEBUG("Checking moisture...\n");
 
-    puts("\nRIOT test for a moisture sensor\n");
+    gpio_set(GPIO_POWER_PIN);
 
-    timex_t sleep1 = timex_set(1, 0); /* 1 sec. */
-    timex_t sleep2 = timex_set(10, 0); /* 10 sec. */
-
-    /* initialize a GPIO that powers the sensor just during a measure */
-    printf("Initializing GPIO_%i as power supplying pin", GPIO_POWER_PIN);
-    if (gpio_init_out(GPIO_POWER_PIN, GPIO_NOPULL) == 0) {
-        puts("    ...[ok]");
-    }
-    else {
-        puts("    ...[failed]");
-        return 1;
-    }
-    puts("\n");
-
-    /* initialize ADC device */
-    printf("Initializing ADC_%i @ %i bit resolution", ADC_IN_USE, (6 + (2* RES)));
-    if (adc_init(ADC_IN_USE, RES) == 0) {
-        puts("    ...[ok]");
-    }
-    else {
-        puts("    ...[failed]");
-        return 1;
-    }
-    puts("\n");
-
-    while (1) {
-
-        gpio_set(GPIO_POWER_PIN);
-
-        /* just for safety */
-        vtimer_sleep(sleep1);
-
-        *humidity = adc_sample(ADC_IN_USE, ADC_CHANNEL_USE);
-
-        gpio_clear(GPIO_POWER_PIN);
-
-        /* print the result */
-        printf("Humidity: ADC_%i: %4i\n", ADC_IN_USE, *humidity);
-
-        /* wait for next measure */
-        vtimer_sleep(sleep2);
-    }
-
-    return 0;
-
+    /* wait until the sensor is ready to go */
+    vtimer_sleep(sleep_timer);
+    *humidity = adc_sample(ADC_IN_USE, ADC_CHANNEL_USE);
+    gpio_clear(GPIO_POWER_PIN);
+    printf("Humidity: ADC_%i: %4i\n", ADC_IN_USE, *humidity);
 }
 
 
