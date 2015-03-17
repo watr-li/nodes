@@ -3,8 +3,10 @@ APPLICATION = plant_node
 
 BOARD ?= samr21-xpro
 RIOTBASE ?= $(CURDIR)/../../RIOT
-
 FEATURES_REQUIRED = periph_adc
+CFLAGS += -DDEVELHELP -DMICROCOAP_DEBUG
+
+USEPKG = microcoap
 
 USEMODULE += vtimer
 
