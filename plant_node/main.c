@@ -38,7 +38,7 @@
 #define ADC_CHANNEL_USE             0
 #define GPIO_POWER_PIN              GPIO_0
 
-timex_t sleep_timer = timex_set(1, 0); /* 1 sec. */
+timex_t sleep_timer;
 
 int main(void)
 {
@@ -48,13 +48,13 @@ int main(void)
     sense_humidity(&humidity);
 }
 
-
 /**
  * @brief    Initialize humidity sensor.
  * @return   0 on success, 1 otherwise // TODO: proper error codes?
  */
 int init_sensor_humidity(void)
 {
+    sleep_timer = timex_set(1, 0); /* 1 sec. */
 
     /* initialize a GPIO that powers the sensor just during a measure */
     DEBUG("Initializing GPIO_%i as power supplying pin", GPIO_POWER_PIN);
