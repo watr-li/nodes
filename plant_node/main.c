@@ -31,7 +31,7 @@
 #define ENABLE_DEBUG (1)
 #include "debug.h"
 
-#define BUFSZ 1500 // TODO: sike ok?
+#define BUFSZ 150 // TODO: sike ok?
 #define WATR_LI_CHANNEL         (21)     /**< The used channel */
 #define WATR_LI_PAN             (0x03e9) /**< The used PAN ID */
 #define WATR_LI_IFACE           (0)      /**< The used Trasmssion device */
