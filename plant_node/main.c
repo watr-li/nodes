@@ -68,7 +68,7 @@ int bytes_sent;
 int main(void)
 {
     static unsigned int humidity;
-    timex_t timer = timex_set(300, 0); /* seconds */
+    timex_t timer = timex_set(10, 0); /* seconds */
 
     DEBUG("Setting up watr.li app...\n");
     watr_li_setup_node(); /* also sets iface_id in the process */
@@ -80,6 +80,9 @@ int main(void)
     /* Add my_id to humidity_path */
     register_path = (coap_endpoint_path_t) {1, {"nodes"}};
     humidity_path = (coap_endpoint_path_t) {3, {"nodes", my_id, "humidity"}};
+
+    vtimer_sleep(timer);
+
     /* register my_id at the root node */
     if (0 != register_at_root(my_id)){
         return 1;
