@@ -9,5 +9,7 @@ CFLAGS += -DDEVELHELP -DMICROCOAP_DEBUG
 USEPKG = microcoap
 
 USEMODULE += vtimer
+USEMODULE += rpl
+USEMODULE += udp
 
 include $(RIOTBASE)/Makefile.include
