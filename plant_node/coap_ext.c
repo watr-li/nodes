@@ -19,7 +19,7 @@
 
 #include "coap_ext.h"
 
-#define ENABLE_DEBUG    (1)
+#define ENABLE_DEBUG    (0)
 #include "debug.h"
 
 // TODO: use rw_buf?
