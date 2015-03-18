@@ -22,6 +22,8 @@
 #define ENABLE_DEBUG    (0)
 #include "debug.h"
 
+int seqnum = 12345;
+
 // TODO: use rw_buf?
 /**
 Build a PUT request.
@@ -32,6 +34,8 @@ int coap_ext_build_PUT(uint8_t *buf, size_t *buflen, char *payload, coap_endpoin
     /*
      * Note: the resource URI is coded as an option! -> COAP_OPTION_URI_PATH
      */
+
+    seqnum++;
 
     DEBUG("creating PUT request...\n");
     size_t req_pkt_sz;
@@ -44,7 +48,7 @@ int coap_ext_build_PUT(uint8_t *buf, size_t *buflen, char *payload, coap_endpoin
         .t = COAP_TYPE_CON,
         .tkl = 0,                                  /* microcoap can't generate tokens anyway */
         .code = MAKE_RSPCODE(0, COAP_METHOD_PUT),  /* class 0, detail 1: this is a PUT. */
-        .id = {22,22}                              /* TODO: create dynamic ID (seqnum style?) */
+        .id = {seqnum,22}                              /* TODO: create dynamic ID (seqnum style?) */
     };
 
     coap_buffer_t payload_buf = {
