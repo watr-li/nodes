@@ -81,7 +81,7 @@ int main(void)
     register_path = (coap_endpoint_path_t) {1, {"nodes"}};
     humidity_path = (coap_endpoint_path_t) {3, {"nodes", my_id, "humidity"}};
 
-    vtimer_sleep(timer);
+    sleep(10);
 
     /* register my_id at the root node */
     if (0 != register_at_root(my_id)){
@@ -95,7 +95,7 @@ int main(void)
     {
         sensor_get_humidity(&humidity);
         send_status_humidity(&humidity);
-        vtimer_sleep(timer);
+        sleep(10);
     }
 
     DEBUG("Shutting down...\n");
