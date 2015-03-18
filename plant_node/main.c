@@ -85,6 +85,7 @@ int main(void)
 
     /* register my_id at the root node */
     if (0 != register_at_root(my_id)){
+        DEBUG("register_at_root failed\n");
         return 1;
     }
 
