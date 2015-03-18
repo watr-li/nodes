@@ -38,7 +38,6 @@
 #define WATR_LI_UDP_PORT        (5683)  /**< The UDP port to listen */
 #define WATR_LI_UDP_BUFFER_SIZE (1024)   /**< The buffer size for receiving UDPs */
 
-static radio_address_t set_watr_li_if(void);
 int register_at_root(char *id);
 int send_status_humidity(unsigned int *humidity);
 static void *watr_li_udp_server(void *arg);
@@ -52,24 +51,27 @@ static int watr_li_init_rpl(void);
 static void watr_li_start_udp_server(void);
 
 uint8_t buf[BUFSZ];
+size_t buflen;
 char* my_id;
 char strbuf[6];
 coap_endpoint_path_t register_path, humidity_path;
-size_t rsplen;
 /** The UDP server thread stack */
 char udp_server_stack_buffer[KERNEL_CONF_STACKSIZE_MAIN];
 /** The node IPv6 address */
 ipv6_addr_t myaddr;
+radio_address_t iface_id = 0xffff;
 
 int main(void)
 {
     static unsigned int humidity;
     timex_t timer = timex_set(300, 0); /* seconds */
 
-    radio_address_t ra_id = set_watr_li_if();
+    watr_li_setup_node(); /* also sets iface_id in the process */
+    watr_li_init_rpl();
+    watr_li_start_udp_server();
 
     /* stringify my_id. we'll be needing this in a sec. */
-    sprintf(my_id, "%u", ra_id);
+    sprintf(my_id, "%u", iface_id);
     /* Add my_id to humidity_path */
     register_path = (coap_endpoint_path_t) {1, {"nodes"}};
     humidity_path = (coap_endpoint_path_t) {3, {"nodes", my_id, "humidity"}};
@@ -91,10 +93,8 @@ int main(void)
  */
 int register_at_root(char *id)
 {
-    // TODO
-    if (0 == coap_ext_build_PUT(buf, &rsplen, my_id, &register_path)) {
-        // TODO: send!
-        //socket_base_sendto(sock_snd, buf, rsplen, 0, &sa_snd, sizeof(sa_snd));
+    if (0 == coap_ext_build_PUT(buf, &buflen, my_id, &register_path)) {
+        watr_li_udp_send((char*) buf, buflen);
         DEBUG("[main] successfully registered with id %s\n", register_path);
         return 0;
     }
@@ -279,8 +279,6 @@ static int set_watr_li_address(ipv6_addr_t* node_addr)
 */
 static int watr_li_setup_node(void)
 {
-    radio_address_t iface_id = 0xffff;
-
     set_watr_li_channel(WATR_LI_CHANNEL);
     set_watr_li_pan(WATR_LI_PAN);
     iface_id = set_watr_li_if();
