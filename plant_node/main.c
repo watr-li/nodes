@@ -222,6 +222,12 @@ static void watr_li_udp_send(char* payload, size_t payload_size)
     }
     rpl_dodag_t *mydodag = rpl_get_my_dodag();
 
+    while(mydodag == NULL) {
+        puts("[watr_li_udp_send] Waiting before node joins dodag before sending!");
+        sleep(5);
+        mydodag = rpl_get_my_dodag();
+    }
+
     if(mydodag != NULL) {
         memset(&sa, 0, sizeof(sa));
         sa.sin6_family = AF_INET;
