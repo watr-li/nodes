@@ -69,7 +69,7 @@ int main(void)
     DEBUG("Setting up watr.li app...\n");
     watr_li_setup_node(); /* also sets iface_id in the process */
     watr_li_init_rpl();
-    //watr_li_start_udp_server();
+    //watr_li_start_udp_server(); /* We don't need this.. yet. */
 
     /* stringify my_id. we'll be needing this in a sec. */
     sprintf(my_id, "%u", iface_id);
@@ -100,6 +100,7 @@ int register_at_root(char *id)
     DEBUG("%s()\n", __func__);
 
     if (0 == coap_ext_build_PUT(buf, &buflen, id, &register_path)) {
+        /* TODO: check if sent successfully, else wait & retry */
         watr_li_udp_send((char*) buf, buflen);
         DEBUG("[main] successfully registered with id %s\n", *register_path.elems);
         return 0;
