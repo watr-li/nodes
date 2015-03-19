@@ -15,6 +15,7 @@
  *
  * @author      Peter Kietzmann <peter.kietzmann@haw-hamburg.de>
  * @author      Lotte Steenbrink <lotte.steenbrink@haw-hamburg.de>
+ * @author      Martin Landsmann <Martin.Landsmann@haw-Hamburg.de>
  * @}
  */
 
