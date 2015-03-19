@@ -51,7 +51,7 @@ static int watr_li_init_rpl(void);
 static void watr_li_start_udp_server(void);
 
 uint8_t buf[BUFSZ];
-size_t buflen;
+size_t buflen = BUFSZ;
 char my_id[32];
 char strbuf[6];
 coap_endpoint_path_t register_path, humidity_path;
@@ -77,7 +77,9 @@ int main(void)
     register_path = (coap_endpoint_path_t) {1, {"nodes"}};
     humidity_path = (coap_endpoint_path_t) {3, {"nodes", my_id, "humidity"}};
     /* register my_id at the root node */
-    register_at_root(my_id);
+    if (0 != register_at_root(my_id)){
+        return 1;
+    }
 
     sensor_init();
     while (1)
@@ -97,12 +99,12 @@ int register_at_root(char *id)
 {
     DEBUG("%s()\n", __func__);
 
-    if (0 == coap_ext_build_PUT(buf, &buflen, my_id, &register_path)) {
+    if (0 == coap_ext_build_PUT(buf, &buflen, id, &register_path)) {
         watr_li_udp_send((char*) buf, buflen);
-        DEBUG("[main] successfully registered with id %s\n", register_path.elems);
+        DEBUG("[main] successfully registered with id %s\n", *register_path.elems);
         return 0;
     }
-    DEBUG("[main] failed to register with with id %s\n", register_path.elems);
+    DEBUG("[main] failed to register with with id %s\n", *register_path.elems);
     return 1;
 }
 
