@@ -60,6 +60,10 @@ char udp_server_stack_buffer[KERNEL_CONF_STACKSIZE_MAIN];
 /** The node IPv6 address */
 ipv6_addr_t myaddr;
 radio_address_t iface_id = 0xffff;
+char addr_str[IPV6_MAX_ADDR_STR_LEN];
+int sock;
+sockaddr6_t sa;
+int bytes_sent;
 
 int main(void)
 {
@@ -82,13 +86,17 @@ int main(void)
     }
 
     sensor_init();
+
+    DEBUG("...Done. Bring it on, plants!\n");
     while (1)
     {
         sensor_get_humidity(&humidity);
         send_status_humidity(&humidity);
         vtimer_sleep(timer);
     }
-    DEBUG("...Done. Bring it on, plants!\n");
+
+    DEBUG("Shutting down...\n");
+    socket_base_close(sock);
 }
 
 /**
@@ -204,12 +212,6 @@ static void watr_li_udp_send(char* payload, size_t payload_size)
 {
     DEBUG("%s()\n", __func__);
 
-    int sock;
-    sockaddr6_t sa;
-    int bytes_sent;
-    sock = socket_base_socket(PF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-    char addr_str[IPV6_MAX_ADDR_STR_LEN];
-
     if (-1 == sock) {
         puts("[watr_li_udp_send] Error Creating Socket!");
         return;
@@ -231,13 +233,12 @@ static void watr_li_udp_send(char* payload, size_t payload_size)
             puts("[watr_li_udp_send] Error sending packet!");
         }
 
-        printf("[watr_li_udp_send] Successful deliverd %i bytes over UDP to %s to 6LoWPAN\n",
+        printf("[watr_li_udp_send] Successfully delivered %i bytes over UDP to %s to 6LoWPAN\n",
                bytes_sent, ipv6_addr_to_str(addr_str, IPV6_MAX_ADDR_STR_LEN,
                     &(sa.sin6_addr)));
     } else {
         puts("[watr_li_udp_send] not joined a DODAG (yet), so payload will not be sent.");
     }
-    socket_base_close(sock);
 }
 
 /**
@@ -324,6 +325,8 @@ static int watr_li_setup_node(void)
 
     /* and set it */
     set_watr_li_address(&myaddr);
+
+    sock = socket_base_socket(PF_INET6, SOCK_DGRAM, IPPROTO_UDP);
 
     return 0;
 }
