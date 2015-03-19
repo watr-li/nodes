@@ -82,7 +82,6 @@ int coap_ext_build_PUT(uint8_t *buf, size_t *buflen, char *payload, coap_endpoin
     coap_dumpPacket(&req_pkt);
 #endif
 
-    printf("xoxo\n");
     // try to  write packet to send buffer
     if (0 != (errcode = coap_build(buf, buflen, &req_pkt))) {
         printf("Error building packet! Error code: %i\nAborting. \n", errcode);
