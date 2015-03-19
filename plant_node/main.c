@@ -31,7 +31,7 @@
 #define ENABLE_DEBUG (1)
 #include "debug.h"
 
-#define BUFSZ 150 // TODO: sike ok?
+#define BUFSZ 1500 // TODO: sike ok?
 #define WATR_LI_CHANNEL         (21)     /**< The used channel */
 #define WATR_LI_PAN             (0x03e9) /**< The used PAN ID */
 #define WATR_LI_IFACE           (0)      /**< The used Trasmssion device */
@@ -53,7 +53,7 @@ static void watr_li_start_udp_server(void);
 uint8_t buf[BUFSZ];
 size_t buflen = BUFSZ;
 char my_id[32];
-char strbuf[6];
+char strbuf[32]; // TODO: big enough?
 coap_endpoint_path_t register_path, humidity_path;
 /** The UDP server thread stack */
 char udp_server_stack_buffer[KERNEL_CONF_STACKSIZE_MAIN];
@@ -110,13 +110,27 @@ int register_at_root(char *id)
 }
 
 /**
- *
+ * @brief send the provided humidity value to the DODAG root.
+ * @param[in]  humidity  pointer to the humidity value to send
  */
 int send_status_humidity(unsigned int *humidity)
 {
-    // TODO
     DEBUG("%s()\n", __func__);
-    return 0;
+
+    /* stringify humidity */
+    sprintf(strbuf, "%u", *humidity); // TODO. modifor is BS
+    /* Clear buffer */
+    buflen = BUFSZ;
+    memset(buf,0, sizeof(buf));
+
+    if (0 == coap_ext_build_PUT(buf, &buflen, strbuf, &humidity_path)) {
+        /* TODO: check if sent successfully, else wait & retry */
+        watr_li_udp_send((char*) buf, buflen);
+        DEBUG("[main] successfully sent humidity value: %s\n", strbuf);
+        return 0;
+    }
+    DEBUG("[main] failed to send humidity \n");
+    return 1;
 }
 
 /**
