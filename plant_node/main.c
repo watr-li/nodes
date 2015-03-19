@@ -52,7 +52,7 @@ static void watr_li_start_udp_server(void);
 
 uint8_t buf[BUFSZ];
 size_t buflen;
-char* my_id;
+char my_id[32];
 char strbuf[6];
 coap_endpoint_path_t register_path, humidity_path;
 /** The UDP server thread stack */
@@ -69,7 +69,7 @@ int main(void)
     DEBUG("Setting up watr.li app...\n");
     watr_li_setup_node(); /* also sets iface_id in the process */
     watr_li_init_rpl();
-    watr_li_start_udp_server();
+    //watr_li_start_udp_server();
 
     /* stringify my_id. we'll be needing this in a sec. */
     sprintf(my_id, "%u", iface_id);
@@ -99,10 +99,10 @@ int register_at_root(char *id)
 
     if (0 == coap_ext_build_PUT(buf, &buflen, my_id, &register_path)) {
         watr_li_udp_send((char*) buf, buflen);
-        DEBUG("[main] successfully registered with id %s\n", register_path);
+        DEBUG("[main] successfully registered with id %s\n", register_path.elems);
         return 0;
     }
-    DEBUG("[main] failed to register with with id %s\n", register_path);
+    DEBUG("[main] failed to register with with id %s\n", register_path.elems);
     return 1;
 }
 
