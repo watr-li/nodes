@@ -28,7 +28,7 @@
 #include "sensor.h"
 #include "coap_ext.h"
 
-#define ENABLE_DEBUG (0)
+#define ENABLE_DEBUG (1)
 #include "debug.h"
 
 #define BUFSZ 150 // TODO: sike ok?
@@ -66,6 +66,7 @@ int main(void)
     static unsigned int humidity;
     timex_t timer = timex_set(300, 0); /* seconds */
 
+    DEBUG("Setting up watr.li app...\n");
     watr_li_setup_node(); /* also sets iface_id in the process */
     watr_li_init_rpl();
     watr_li_start_udp_server();
@@ -85,6 +86,7 @@ int main(void)
         send_status_humidity(&humidity);
         vtimer_sleep(timer);
     }
+    DEBUG("...Done. Bring it on, plants!\n");
 }
 
 /**
@@ -93,6 +95,8 @@ int main(void)
  */
 int register_at_root(char *id)
 {
+    DEBUG("%s()\n", __func__);
+
     if (0 == coap_ext_build_PUT(buf, &buflen, my_id, &register_path)) {
         watr_li_udp_send((char*) buf, buflen);
         DEBUG("[main] successfully registered with id %s\n", register_path);
@@ -108,6 +112,7 @@ int register_at_root(char *id)
 int send_status_humidity(unsigned int *humidity)
 {
     // TODO
+    DEBUG("%s()\n", __func__);
     return 0;
 }
 
@@ -117,6 +122,8 @@ int send_status_humidity(unsigned int *humidity)
 */
 static void *watr_li_udp_server(void *arg)
 {
+    DEBUG("%s()\n", __func__);
+
     (void) arg;
 
     sockaddr6_t sa;
@@ -178,6 +185,8 @@ static void *watr_li_udp_server(void *arg)
 */
 static void watr_li_udp_send(char* payload, size_t payload_size)
 {
+    DEBUG("%s()\n", __func__);
+
     int sock;
     sockaddr6_t sa;
     int bytes_sent;
@@ -220,6 +229,8 @@ static void watr_li_udp_send(char* payload, size_t payload_size)
 */
 static radio_address_t set_watr_li_if(void)
 {
+    DEBUG("%s()\n", __func__);
+
     net_if_set_src_address_mode(WATR_LI_IFACE, NET_IF_TRANS_ADDR_M_SHORT);
     radio_address_t iface_id = net_if_get_hardware_address(WATR_LI_IFACE);
     return iface_id;
@@ -232,6 +243,8 @@ static radio_address_t set_watr_li_if(void)
 */
 static int set_watr_li_channel(int32_t chan)
 {
+    DEBUG("%s()\n", __func__);
+
     transceiver_command_t tcmd;
     msg_t m;
 
@@ -251,6 +264,8 @@ static int set_watr_li_channel(int32_t chan)
 */
 static int set_watr_li_pan(int32_t pan)
 {
+    DEBUG("%s()\n", __func__);
+
     transceiver_command_t tcmd;
     msg_t m;
 
@@ -269,6 +284,8 @@ static int set_watr_li_pan(int32_t pan)
 */
 static int set_watr_li_address(ipv6_addr_t* node_addr)
 {
+    DEBUG("%s()\n", __func__);
+
     ipv6_net_if_add_addr(WATR_LI_IFACE, node_addr, NDP_ADDR_STATE_PREFERRED, 0, 0, 0);
     return 0;
 }
@@ -279,6 +296,8 @@ static int set_watr_li_address(ipv6_addr_t* node_addr)
 */
 static int watr_li_setup_node(void)
 {
+    DEBUG("%s()\n", __func__);
+
     set_watr_li_channel(WATR_LI_CHANNEL);
     set_watr_li_pan(WATR_LI_PAN);
     iface_id = set_watr_li_if();
@@ -298,6 +317,8 @@ static int watr_li_setup_node(void)
 */
 static int watr_li_init_rpl(void)
 {
+    DEBUG("%s()\n", __func__);
+
     rpl_init(WATR_LI_IFACE);
     ipv6_iface_set_routing_provider(rpl_get_next_hop);
     return 0;
@@ -308,6 +329,8 @@ static int watr_li_init_rpl(void)
 */
 static void watr_li_start_udp_server(void)
 {
+    DEBUG("%s()\n", __func__);
+
     thread_create(udp_server_stack_buffer,sizeof(udp_server_stack_buffer),
                   PRIORITY_MAIN, CREATE_STACKTEST, watr_li_udp_server, NULL,
                   "watr.li udp_server");
