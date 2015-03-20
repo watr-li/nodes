@@ -53,6 +53,7 @@ static int watr_li_setup_node(void);
 static int watr_li_init_rpl(void);
 static void watr_li_start_udp_server(void);
 
+timex_t udp_send_timer;
 uint8_t buf[BUFSZ];
 size_t buflen = BUFSZ;
 char my_id[32];
@@ -72,7 +73,7 @@ int main(void)
 {
     static unsigned int humidity, prev_humidity;
     timex_t timer = timex_set(10, 0); /* seconds */
-
+    udp_send_timer = timex_set(5,0);
 
     DEBUG("Setting up watr.li app...\n");
     watr_li_setup_node(); /* also sets iface_id in the process */
@@ -85,7 +86,7 @@ int main(void)
     register_path = (coap_endpoint_path_t) {1, {"nodes"}};
     humidity_path = (coap_endpoint_path_t) {3, {"nodes", my_id, "humidity"}};
 
-    sleep(10);
+    vtimer_sleep(timer);
 
     /* register my_id at the root node */
     if (0 != register_at_root(my_id)){
@@ -103,7 +104,7 @@ int main(void)
         if (significant_humidity_change(&prev_humidity, &humidity)){
             send_status_humidity(&humidity);
         }
-        sleep(10);
+        vtimer_sleep(timer);
     }
 
     DEBUG("Shutting down...\n");
@@ -249,7 +250,7 @@ static void watr_li_udp_send(char* payload, size_t payload_size)
 
     while(mydodag == NULL) {
         puts("[watr_li_udp_send] Waiting before node joins dodag before sending!");
-        sleep(5);
+        vtimer_sleep(udp_send_timer);
         mydodag = rpl_get_my_dodag();
     }
 
