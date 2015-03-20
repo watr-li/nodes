@@ -32,7 +32,8 @@
 #define ENABLE_DEBUG (1)
 #include "debug.h"
 
-#define BUFSZ 150 // TODO: sike ok?
+#define BUFSZ 150 // TODO: size ok?
+#define HYSTERESIS 10 // TODO: value ok?
 #define WATR_LI_CHANNEL         (21)     /**< The used channel */
 #define WATR_LI_PAN             (0x03e9) /**< The used PAN ID */
 #define WATR_LI_IFACE           (0)      /**< The used Trasmssion device */
@@ -41,6 +42,7 @@
 
 int register_at_root(char *id);
 int send_status_humidity(unsigned int *humidity);
+bool significant_humidity_change(unsigned int *prev_humidity, unsigned int *humidity);
 static void *watr_li_udp_server(void *arg);
 static void watr_li_udp_send(char* payload, size_t payload_size);
 static radio_address_t set_watr_li_if(void);
@@ -68,8 +70,9 @@ int bytes_sent;
 
 int main(void)
 {
-    static unsigned int humidity;
+    static unsigned int humidity, prev_humidity;
     timex_t timer = timex_set(10, 0); /* seconds */
+
 
     DEBUG("Setting up watr.li app...\n");
     watr_li_setup_node(); /* also sets iface_id in the process */
@@ -95,8 +98,11 @@ int main(void)
     DEBUG("...Done. Bring it on, plants!\n");
     while (1)
     {
+        prev_humidity = humidity;
         sensor_get_humidity(&humidity);
-        send_status_humidity(&humidity);
+        if (significant_humidity_change(&prev_humidity, &humidity)){
+            send_status_humidity(&humidity);
+        }
         sleep(10);
     }
 
@@ -144,6 +150,24 @@ int send_status_humidity(unsigned int *humidity)
     }
     DEBUG("[main] failed to send humidity \n");
     return 1;
+}
+
+/**
+ * @brief decide if the change in humidity is not just a slight variation.
+ */
+bool significant_humidity_change(unsigned int *prev_humidity, unsigned int *humidity){
+    if (*prev_humidity == *humidity){
+        return false;
+    }
+    if (*prev_humidity < *humidity
+        && (*prev_humidity+HYSTERESIS) > *humidity ){
+        return false;
+    }
+    if (*prev_humidity > *humidity
+        && (*prev_humidity-HYSTERESIS) < *humidity ){
+        return false;
+    }
+    return true;
 }
 
 /**
