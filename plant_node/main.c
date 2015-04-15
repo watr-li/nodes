@@ -32,7 +32,7 @@
 #define ENABLE_DEBUG (1)
 #include "debug.h"
 
-#define BUFSZ 150 // TODO: size ok?
+#define BUFSZ 250 // TODO: size ok?
 #define HYSTERESIS 10 // TODO: value ok?
 #define WATR_LI_CHANNEL         (21)     /**< The used channel */
 #define WATR_LI_PAN             (0x03e9) /**< The used PAN ID */
@@ -82,6 +82,7 @@ int main(void)
 
     /* stringify my_id. we'll be needing this in a sec. */
     sprintf(my_id, "%u", iface_id);
+
     /* Add my_id to humidity_path */
     register_path = (coap_endpoint_path_t) {1, {"nodes"}};
     humidity_path = (coap_endpoint_path_t) {3, {"nodes", my_id, "humidity"}};
