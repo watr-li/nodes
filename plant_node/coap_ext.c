@@ -77,18 +77,18 @@ int coap_ext_build_PUT(uint8_t *buf, size_t *buflen, char *payload, coap_endpoin
     req_pkt_sz = sizeof(req_pkt);
 
     if (*buflen < req_pkt_sz) {
-        DEBUG("Error: buflen too small:\n\tbuflen:%zd\n\treq_pkt_sz:%zd\n", buflen, req_pkt_sz);
+        DEBUG("Error: buflen too small:\n\tbuflen:%d\n\treq_pkt_sz:%d\n", *buflen, req_pkt_sz);
         return -1;
     }
 
 #ifdef DEBUG
-    printf("[main-posix] content:\n");
+    DEBUG("[main-posix] content:\n");
     coap_dumpPacket(&req_pkt);
 #endif
 
     // try to  write packet to send buffer
     if (0 != (errcode = coap_build(buf, buflen, &req_pkt))) {
-        printf("Error building packet! Error code: %i\nAborting. \n", errcode);
+        DEBUG("Error building packet! Error code: %i\nAborting. \n", errcode);
         return -1;
     }
     return 0;
