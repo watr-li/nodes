@@ -100,6 +100,8 @@ int main(void)
     DEBUG("...Done. Bring it on, plants!\n");
     while (1)
     {
+        /* TODO: only store previous humidity if the value is sent
+        * to prevent the difference from “creeping up” without ever being reported. */
         prev_humidity = humidity;
         sensor_get_humidity(&humidity);
         if (significant_humidity_change(&prev_humidity, &humidity)){
