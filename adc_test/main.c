@@ -23,7 +23,7 @@
 
 #include "cpu.h"
 #include "board.h"
-#include "vtimer.h"
+#include "xtimer.h"
 #include "periph/adc.h"
 #include "periph/gpio.h"
 
@@ -36,14 +36,13 @@
 #define ADC_CHANNEL_USE             0
 #define GPIO_POWER_PIN              GPIO_0
 
+#define ADC_SLEEP1                  (1)
+#define ADC_SLEEP2                  (1)
 static unsigned int value;
 
 int main(void)
 {
     puts("\nRIOT test for a moisture sensor\n");
-
-    timex_t sleep1 = timex_set(1, 0); /* 1 sec. */
-    timex_t sleep2 = timex_set(1, 0); /* 1 sec. */
 
     /* initialize a GPIO that powers the sensor just during a measure */
     printf("Initializing GPIO_%i as power supplying pin", GPIO_POWER_PIN);
@@ -72,7 +71,7 @@ int main(void)
         gpio_set(GPIO_POWER_PIN);
 
         /* just for safety */
-        vtimer_sleep(sleep1);
+        xtimer_sleep(ADC_SLEEP1);
 
         value = adc_sample(ADC_IN_USE, ADC_CHANNEL_USE);
 
@@ -92,7 +91,7 @@ int main(void)
         }
 
          /* wait for next measure */
-        vtimer_sleep(sleep2);
+        xtimer_sleep(ADC_SLEEP2);
     }
 
     return 0;

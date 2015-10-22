@@ -25,7 +25,7 @@
 #include <coap.h>
 
 /**
- * @brief   Build a PUT request. 
+ * @brief   Build a PUT request.
  *          Only supports 0=text/plain payload.
  *
  * @param[in] buf
@@ -34,6 +34,7 @@
  * @return                  -1 on error
  */
 
-int coap_ext_build_PUT(uint8_t *buf, size_t *buflen, char *payload, coap_endpoint_path_t *path);
+int coap_ext_build_PUT(uint8_t *buf, size_t *buflen,
+                       const char *payload, const coap_endpoint_path_t *path);
 
 #endif /* COAP_EXT_H */
