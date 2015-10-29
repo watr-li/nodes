@@ -3,8 +3,8 @@
 
 #define WATR_LI_HYSTERESIS      (10)        /** < sensor value threshold */
 
-#define WATR_LI_CHANNEL         (21)        /**< wireless channel */
-#define WATR_LI_PAN             (0x03e9)    /**< The used PAN ID */
+#define WATR_LI_CHANNEL         (26)        /**< wireless channel */
+#define WATR_LI_PAN             (0x0023)    /**< The used PAN ID */
 #define WATR_LI_IFACE           (0)         /**< trasmssion device */
 #define WATR_LI_UDP_PORT        (5683)      /**< listen port, defaults to COAP */
 
