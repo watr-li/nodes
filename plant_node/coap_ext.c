@@ -22,6 +22,11 @@
 #define ENABLE_DEBUG    (0)
 #include "debug.h"
 
+const coap_endpoint_t endpoints[] =
+{
+    {(coap_method_t)0, NULL, NULL, NULL} /* marks the end of the endpoints array */
+};
+
 int seqnum = 12345;
 
 // TODO: use rw_buf?
@@ -29,7 +34,8 @@ int seqnum = 12345;
 Build a PUT request.
 The value of buflen will be the request packet's size after successful completion.
 */
-int coap_ext_build_PUT(uint8_t *buf, size_t *buflen, char *payload, coap_endpoint_path_t *path)
+int coap_ext_build_PUT(uint8_t *buf, size_t *buflen,
+                       const char *payload, const coap_endpoint_path_t *path)
 {
     /*
      * Note: the resource URI is coded as an option! -> COAP_OPTION_URI_PATH
